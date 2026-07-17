@@ -60,7 +60,7 @@ function App() {
             }
           })
         }
-      } catch (e) {
+      } catch {
         // Safeguard
       }
     }, 15000)
