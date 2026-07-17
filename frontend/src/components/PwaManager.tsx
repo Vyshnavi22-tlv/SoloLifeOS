@@ -99,7 +99,7 @@ export const PwaManager: React.FC = () => {
       }
 
       addToast('Background sync completed!', 'success')
-    } catch (e) {
+    } catch {
       // Safe check
     }
   }
