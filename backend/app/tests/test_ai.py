@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch
 def test_ai_chat_missing_api_key(client, test_user):
     # Log in
     login_res = client.post(
-        "/api/v1/auth/login",
+        "/api/v1/auth/login/access-token",
         data={"username": test_user.email, "password": "password123"}
     )
     token = login_res.json()["access_token"]
@@ -37,11 +37,15 @@ def test_ai_chat_streaming_success(mock_create, client, test_user):
             
         yield MockChunkEmpty()
 
-    mock_create.return_value = mock_chunks()
+    # Create an async mock function wrapper to return the generator
+    async def mock_create_fn(*args, **kwargs):
+        return mock_chunks()
+
+    mock_create.side_effect = mock_create_fn
 
     # Log in
     login_res = client.post(
-        "/api/v1/auth/login",
+        "/api/v1/auth/login/access-token",
         data={"username": test_user.email, "password": "password123"}
     )
     token = login_res.json()["access_token"]

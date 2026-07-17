@@ -4,6 +4,7 @@ from app.core.config import settings
 from app.core.logging_config import setup_logging
 from app.core.exceptions import AppException, app_exception_handler
 from app.api.v1.api import api_router
+from app.core.middleware import SecurityMiddleware
 
 # Setup structured logging
 setup_logging()
@@ -12,6 +13,8 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+app.add_middleware(SecurityMiddleware)
 
 # Register custom exception handler
 app.add_exception_handler(AppException, app_exception_handler)

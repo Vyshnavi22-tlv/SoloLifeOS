@@ -1,3 +1,22 @@
+import sys
+import logging
+# Suppress passlib warnings
+logging.getLogger("passlib").setLevel(logging.ERROR)
+
+try:
+    import bcrypt
+    original_hashpw = bcrypt.hashpw
+    def safe_hashpw(password, salt):
+        # Truncate to bcrypt limit of 72 bytes to avoid ValueError on Python 3.11+
+        if isinstance(password, str):
+            password = password.encode("utf-8")
+        if len(password) > 72:
+            password = password[:72]
+        return original_hashpw(password, salt)
+    bcrypt.hashpw = safe_hashpw
+except ImportError:
+    pass
+
 from datetime import datetime, timedelta, timezone
 from typing import Any, Union
 from jose import jwt

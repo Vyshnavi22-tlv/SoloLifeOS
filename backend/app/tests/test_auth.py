@@ -14,7 +14,7 @@ def test_user_registration(client):
 def test_user_login(client, test_user):
     # Test valid login credentials
     response = client.post(
-        "/api/v1/auth/login",
+        "/api/v1/auth/login/access-token",
         data={"username": test_user.email, "password": "password123"}
     )
     assert response.status_code == 200
@@ -26,7 +26,7 @@ def test_user_login(client, test_user):
 def test_user_login_invalid_password(client, test_user):
     # Test invalid login credentials
     response = client.post(
-        "/api/v1/auth/login",
+        "/api/v1/auth/login/access-token",
         data={"username": test_user.email, "password": "wrongpassword"}
     )
     assert response.status_code == 400
@@ -35,7 +35,7 @@ def test_user_login_invalid_password(client, test_user):
 def test_read_user_me(client, test_user):
     # Log in to acquire access token
     login_response = client.post(
-        "/api/v1/auth/login",
+        "/api/v1/auth/login/access-token",
         data={"username": test_user.email, "password": "password123"}
     )
     access_token = login_response.json()["access_token"]
@@ -51,15 +51,14 @@ def test_read_user_me(client, test_user):
 def test_refresh_token_rotation(client, test_user):
     # Log in to acquire refresh token
     login_response = client.post(
-        "/api/v1/auth/login",
+        "/api/v1/auth/login/access-token",
         data={"username": test_user.email, "password": "password123"}
     )
     refresh_token = login_response.json()["refresh_token"]
 
-    # Call token refresh endpoint
+    # Call token refresh endpoint (refresh_token is query param)
     response = client.post(
-        "/api/v1/auth/refresh",
-        json={"refresh_token": refresh_token}
+        f"/api/v1/auth/refresh?refresh_token={refresh_token}"
     )
     assert response.status_code == 200
     data = response.json()

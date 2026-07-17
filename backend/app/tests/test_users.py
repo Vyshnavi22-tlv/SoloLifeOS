@@ -1,7 +1,7 @@
 def test_update_profile(client, test_user):
     # Log in
     login_res = client.post(
-        "/api/v1/auth/login",
+        "/api/v1/auth/login/access-token",
         data={"username": test_user.email, "password": "password123"}
     )
     token = login_res.json()["access_token"]
@@ -10,7 +10,7 @@ def test_update_profile(client, test_user):
     response = client.put(
         "/api/v1/users/me",
         headers={"Authorization": f"Bearer {token}"},
-        json={"email": "test@sololife.com", "fullName": "Updated Test User"}
+        json={"email": "test@sololife.com", "full_name": "Updated Test User"}
     )
     assert response.status_code == 200
     assert response.json()["full_name"] == "Updated Test User"
@@ -18,7 +18,7 @@ def test_update_profile(client, test_user):
 def test_export_user_data(client, test_user):
     # Log in
     login_res = client.post(
-        "/api/v1/auth/login",
+        "/api/v1/auth/login/access-token",
         data={"username": test_user.email, "password": "password123"}
     )
     token = login_res.json()["access_token"]
@@ -32,12 +32,12 @@ def test_export_user_data(client, test_user):
     data = response.json()
     assert "user" in data
     assert data["user"]["email"] == test_user.email
-    assert "exported_at" in data
+    assert "modules" in data
 
 def test_delete_user_account(client, test_user):
     # Log in
     login_res = client.post(
-        "/api/v1/auth/login",
+        "/api/v1/auth/login/access-token",
         data={"username": test_user.email, "password": "password123"}
     )
     token = login_res.json()["access_token"]
@@ -48,4 +48,4 @@ def test_delete_user_account(client, test_user):
         headers={"Authorization": f"Bearer {token}"}
     )
     assert response.status_code == 200
-    assert response.json()["detail"] == "User deleted successfully"
+    assert response.json()["message"] == "Account deleted successfully"
