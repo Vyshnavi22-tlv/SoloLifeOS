@@ -16,13 +16,30 @@
   --radius-xl: 24px;
 }
 
+:root {
+  --theme-bg: #fafafa;
+}
+
+html[data-theme='blue'] {
+  --theme-bg: #f0f9ff;
+}
+
+html[data-theme='pink'] {
+  --theme-bg: #fdf2f8;
+}
+
+html[data-theme='lavender'] {
+  --theme-bg: #faf5ff;
+}
+
 /* Custom base styles */
 @layer base {
   body {
-    background-color: #fafafa;
+    background-color: var(--theme-bg);
     color: #1e293b;
     font-family: var(--font-sans);
     min-height: 100vh;
+    transition: background-color 0.3s ease;
   }
 }
 

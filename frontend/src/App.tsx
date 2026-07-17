@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useThemeStore } from './stores/themeStore'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { Auth } from './pages/Auth'
@@ -14,10 +16,17 @@ import { Reading } from './pages/Reading'
 import { Fitness } from './pages/Fitness'
 import { Pomodoro } from './pages/Pomodoro'
 import { Analytics } from './pages/Analytics'
+import { Settings } from './pages/Settings'
 import { ToastContainer } from './components/ui/Toast'
 
 
 function App() {
+  const theme = useThemeStore((state) => state.theme)
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
+
   return (
     <>
     <BrowserRouter>
@@ -142,6 +151,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Analytics />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Settings />
               </Layout>
             </ProtectedRoute>
           }
