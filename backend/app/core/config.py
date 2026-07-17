@@ -27,6 +27,7 @@ class Settings(BaseSettings):
 
     # AI API Keys
     OPENAI_API_KEY: str = ""
+    OPENROUTER_API_KEY: str = ""
 
     # CORS
     BACKEND_CORS_ORIGINS: Annotated[

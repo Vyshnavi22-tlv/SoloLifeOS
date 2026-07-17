@@ -21,6 +21,7 @@ import {
   Bell,
   ChevronRight,
   ListTodo,
+  Sparkles,
   Settings as SettingsIcon
 } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
@@ -107,6 +108,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Fitness', path: '/fitness', icon: Dumbbell },
     { name: 'Pomodoro', path: '/pomodoro', icon: Timer },
     { name: 'Analytics', path: '/analytics', icon: BarChart2 },
+    { name: 'AI Assistant', path: '/ai-assistant', icon: Sparkles },
     { name: 'Settings', path: '/settings', icon: SettingsIcon }
   ]
 

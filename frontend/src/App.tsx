@@ -19,6 +19,7 @@ import { Pomodoro } from './pages/Pomodoro'
 import { Analytics } from './pages/Analytics'
 import { Settings } from './pages/Settings'
 import { Tasks } from './pages/Tasks'
+import { AiAssistant } from './pages/AiAssistant'
 import { ToastContainer } from './components/ui/Toast'
 
 
@@ -175,6 +176,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Settings />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-assistant"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AiAssistant />
               </Layout>
             </ProtectedRoute>
           }
