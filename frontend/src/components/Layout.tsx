@@ -20,6 +20,7 @@ import {
   Search,
   Bell,
   ChevronRight,
+  ListTodo,
   Settings as SettingsIcon
 } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
@@ -95,6 +96,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
     { name: 'Calendar', path: '/calendar', icon: Calendar },
+    { name: 'Tasks', path: '/tasks', icon: ListTodo },
     { name: 'Goals', path: '/goals', icon: Target },
     { name: 'Habits', path: '/habits', icon: CheckSquare },
     { name: 'Notes', path: '/notes', icon: FileText },

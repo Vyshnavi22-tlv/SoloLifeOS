@@ -18,6 +18,7 @@ import { Fitness } from './pages/Fitness'
 import { Pomodoro } from './pages/Pomodoro'
 import { Analytics } from './pages/Analytics'
 import { Settings } from './pages/Settings'
+import { Tasks } from './pages/Tasks'
 import { ToastContainer } from './components/ui/Toast'
 
 
@@ -54,6 +55,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Calendar />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tasks"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Tasks />
               </Layout>
             </ProtectedRoute>
           }
