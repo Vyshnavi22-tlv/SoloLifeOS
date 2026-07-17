@@ -21,6 +21,7 @@ import { Settings } from './pages/Settings'
 import { Tasks } from './pages/Tasks'
 import { AiAssistant } from './pages/AiAssistant'
 import { useToastStore } from './stores/toastStore'
+import { PwaManager } from './components/PwaManager'
 import { ToastContainer } from './components/ui/Toast'
 
 
@@ -228,6 +229,7 @@ function App() {
         />
       </Routes>
     </BrowserRouter>
+    <PwaManager />
     <ToastContainer />
     </>
   )
