@@ -14,9 +14,12 @@ import { Reading } from './pages/Reading'
 import { Fitness } from './pages/Fitness'
 import { Pomodoro } from './pages/Pomodoro'
 import { Analytics } from './pages/Analytics'
+import { ToastContainer } from './components/ui/Toast'
+
 
 function App() {
   return (
+    <>
     <BrowserRouter>
       <Routes>
         {/* Public Routes */}
@@ -145,6 +148,8 @@ function App() {
         />
       </Routes>
     </BrowserRouter>
+    <ToastContainer />
+    </>
   )
 }
 
