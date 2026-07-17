@@ -12,40 +12,116 @@ export interface User {
 interface AuthState {
   user: User | null
   token: string | null
+  refreshToken: string | null
+  rememberMe: boolean
   isAuthenticated: boolean
   isLoading: boolean
   error: string | null
-  setToken: (token: string | null) => void
+  initializeAuth: () => void
   setUser: (user: User | null) => void
-  login: (token: string, user: User) => void
+  login: (token: string, refreshToken: string, user: User, rememberMe: boolean) => void
   logout: () => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
-  isLoading: false,
+  token: null,
+  refreshToken: null,
+  rememberMe: false,
+  isAuthenticated: false,
+  isLoading: true,
   error: null,
-  setToken: (token) => {
-    if (token) {
-      localStorage.setItem('token', token)
-    } else {
-      localStorage.removeItem('token')
+
+  initializeAuth: () => {
+    const rememberMe = localStorage.getItem('rememberMe') === 'true'
+    const storage = rememberMe ? localStorage : sessionStorage
+    
+    const token = storage.getItem('token')
+    const refreshToken = storage.getItem('refreshToken')
+    const userStr = storage.getItem('user')
+    let user = null
+    
+    if (userStr) {
+      try {
+        user = JSON.parse(userStr)
+      } catch {
+        // Clear corrupt storage
+        storage.clear()
+      }
     }
-    set({ token, isAuthenticated: !!token })
+
+    set({
+      token,
+      refreshToken,
+      user,
+      rememberMe,
+      isAuthenticated: !!token,
+      isLoading: false
+    })
   },
-  setUser: (user) => set({ user }),
-  login: (token, user) => {
-    localStorage.setItem('token', token)
-    set({ token, user, isAuthenticated: true, error: null })
+
+  setUser: (user) => {
+    const rememberMe = get().rememberMe
+    const storage = rememberMe ? localStorage : sessionStorage
+    if (user) {
+      storage.setItem('user', JSON.stringify(user))
+    } else {
+      storage.removeItem('user')
+    }
+    set({ user })
   },
+
+  login: (token, refreshToken, user, rememberMe) => {
+    const storage = rememberMe ? localStorage : sessionStorage
+    
+    // Persist rememberMe setting
+    localStorage.setItem('rememberMe', String(rememberMe))
+    
+    storage.setItem('token', token)
+    storage.setItem('refreshToken', refreshToken)
+    storage.setItem('user', JSON.stringify(user))
+
+    set({
+      token,
+      refreshToken,
+      user,
+      rememberMe,
+      isAuthenticated: true,
+      error: null
+    })
+  },
+
   logout: () => {
-    localStorage.removeItem('token')
-    set({ token: null, user: null, isAuthenticated: false, error: null })
+    const rememberMe = get().rememberMe
+    const storage = rememberMe ? localStorage : sessionStorage
+    
+    storage.removeItem('token')
+    storage.removeItem('refreshToken')
+    storage.removeItem('user')
+    localStorage.removeItem('rememberMe')
+
+    set({
+      token: null,
+      refreshToken: null,
+      user: null,
+      rememberMe: false,
+      isAuthenticated: false,
+      error: null
+    })
   },
+
   setLoading: (loading) => set({ isLoading: loading }),
-  setError: (error) => set({ error }),
+  setError: (error) => set({ error })
 }))
+export const getActiveToken = (): string | null => {
+  const rememberMe = localStorage.getItem('rememberMe') === 'true'
+  const storage = rememberMe ? localStorage : sessionStorage
+  return storage.getItem('token')
+}
+export const getActiveRefreshToken = (): string | null => {
+  const rememberMe = localStorage.getItem('rememberMe') === 'true'
+  const storage = rememberMe ? localStorage : sessionStorage
+  return storage.getItem('refreshToken')
+}

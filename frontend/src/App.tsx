@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useThemeStore } from './stores/themeStore'
+import { useAuthStore } from './stores/authStore'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { Layout } from './components/Layout'
 import { Auth } from './pages/Auth'
@@ -22,10 +23,12 @@ import { ToastContainer } from './components/ui/Toast'
 
 function App() {
   const theme = useThemeStore((state) => state.theme)
+  const initializeAuth = useAuthStore((state) => state.initializeAuth)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
-  }, [theme])
+    initializeAuth()
+  }, [theme, initializeAuth])
 
   return (
     <>
