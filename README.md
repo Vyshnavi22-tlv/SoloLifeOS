@@ -260,5 +260,8 @@ Database
 * PostgreSQL
 
 ---
+#Live deployment
+
+https://solo-life-os.vercel.app/auth
 
 Made with 💙 for building a happier, healthier, and more productive life.
