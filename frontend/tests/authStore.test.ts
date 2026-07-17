@@ -33,10 +33,10 @@ describe('Auth Zustand Store Unit Tests', () => {
     expect(state.user).toEqual(mockUser)
     expect(state.token).toBe(mockToken)
     expect(state.isAuthenticated).toBe(true)
-    
-    // Default should store in sessionStorage
-    expect(sessionStorage.getItem('sololife_token')).toBe(mockToken)
-    expect(localStorage.getItem('sololife_token')).toBeNull()
+
+    // Default should store in sessionStorage (rememberMe = false)
+    expect(sessionStorage.getItem('token')).toBe(mockToken)
+    expect(localStorage.getItem('token')).toBeNull()
   })
 
   it('should store in localStorage if rememberMe is checked', () => {
@@ -53,8 +53,8 @@ describe('Auth Zustand Store Unit Tests', () => {
 
     useAuthStore.getState().login(mockToken, mockRefresh, mockUser, true)
 
-    expect(localStorage.getItem('sololife_token')).toBe(mockToken)
-    expect(sessionStorage.getItem('sololife_token')).toBeNull()
+    expect(localStorage.getItem('token')).toBe(mockToken)
+    expect(sessionStorage.getItem('token')).toBeNull()
   })
 
   it('should clear stores on logout', () => {
@@ -76,6 +76,6 @@ describe('Auth Zustand Store Unit Tests', () => {
     expect(state.user).toBeNull()
     expect(state.token).toBeNull()
     expect(state.isAuthenticated).toBe(false)
-    expect(localStorage.getItem('sololife_token')).toBeNull()
+    expect(localStorage.getItem('token')).toBeNull()
   })
 })

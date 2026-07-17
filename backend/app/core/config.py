@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "sololifeos"
-    SQLALCHEMY_DATABASE_URI: str = "postgresql://postgres:postgres@localhost:5432/sololifeos"
+    SQLALCHEMY_DATABASE_URI: str = "sqlite:///./sololifeos.db"
 
     # AI API Keys
     OPENAI_API_KEY: str = ""
