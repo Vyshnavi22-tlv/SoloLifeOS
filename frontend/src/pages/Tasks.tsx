@@ -101,6 +101,20 @@ export const Tasks: React.FC = () => {
     }
   ])
 
+  React.useEffect(() => {
+    try {
+      const stored = localStorage.getItem('sololifeos_quick_tasks')
+      if (stored) {
+        const quickTasks = JSON.parse(stored) as Task[]
+        if (quickTasks.length > 0) {
+          setTasks(prev => [...quickTasks, ...prev])
+          localStorage.removeItem('sololifeos_quick_tasks')
+          addToast(`Imported ${quickTasks.length} quick-added tasks!`, 'success')
+        }
+      }
+    } catch {}
+  }, [addToast])
+
   // View settings
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban')
   const [searchQuery, setSearchQuery] = useState('')

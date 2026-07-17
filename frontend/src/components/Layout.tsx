@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
 import { useToastStore } from '../stores/toastStore'
+import { Button } from './ui/Button'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -48,6 +49,114 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [profileOpen, setProfileOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Global Command Palette & Quick Add States
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [quickAddType, setQuickAddType] = useState<'none' | 'task' | 'note' | 'expense' | 'habit'>('none')
+  const [quickInputVal1, setQuickInputVal1] = useState('')
+  const [quickInputVal2, setQuickInputVal2] = useState('')
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setCommandPaletteOpen(prev => !prev)
+        setQuickAddType('none')
+        setQuickInputVal1('')
+        setQuickInputVal2('')
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const handleQuickAddTask = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!quickInputVal1.trim()) return
+    const newTask = {
+      id: `task-${Math.random().toString(36).substr(2, 9)}`,
+      title: quickInputVal1.trim(),
+      status: 'todo',
+      project: 'Inbox',
+      priority: 'medium',
+      subtasks: [],
+      recurrence: 'none'
+    }
+    const current = JSON.parse(localStorage.getItem('sololifeos_quick_tasks') || '[]')
+    localStorage.setItem('sololifeos_quick_tasks', JSON.stringify([...current, newTask]))
+    addToast(`Task "${newTask.title}" queued for import!`, 'success')
+    setQuickInputVal1('')
+    setQuickAddType('none')
+    setCommandPaletteOpen(false)
+  }
+
+  const handleQuickAddNote = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!quickInputVal1.trim()) return
+    const newNote = {
+      id: `note-${Math.random().toString(36).substr(2, 9)}`,
+      title: quickInputVal1.trim(),
+      content: quickInputVal2.trim() || 'No content.',
+      folder: 'Personal',
+      tags: ['Quick'],
+      pinned: false,
+      updatedAt: new Date().toLocaleString(),
+      versions: []
+    }
+    const current = JSON.parse(localStorage.getItem('sololifeos_quick_notes') || '[]')
+    localStorage.setItem('sololifeos_quick_notes', JSON.stringify([...current, newNote]))
+    addToast(`Note "${newNote.title}" queued for import!`, 'success')
+    setQuickInputVal1('')
+    setQuickInputVal2('')
+    setQuickAddType('none')
+    setCommandPaletteOpen(false)
+  }
+
+  const handleQuickAddExpense = (e: React.FormEvent) => {
+    e.preventDefault()
+    const amt = parseFloat(quickInputVal1)
+    if (isNaN(amt) || amt <= 0) {
+      addToast('Please enter a valid amount', 'warning')
+      return
+    }
+    const newTx = {
+      id: `t-${Math.random().toString(36).substr(2, 9)}`,
+      date: new Date().toISOString().split('T')[0],
+      description: quickInputVal2.trim() || 'Quick Expense',
+      type: 'expense',
+      category: 'Food',
+      amount: amt
+    }
+    const current = JSON.parse(localStorage.getItem('sololifeos_quick_expenses') || '[]')
+    localStorage.setItem('sololifeos_quick_expenses', JSON.stringify([...current, newTx]))
+    addToast(`Expense of $${amt} logged successfully!`, 'success')
+    setQuickInputVal1('')
+    setQuickInputVal2('')
+    setQuickAddType('none')
+    setCommandPaletteOpen(false)
+  }
+
+  const handleQuickAddHabit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!quickInputVal1.trim()) return
+    const newHabit = {
+      id: `h-${Math.random().toString(36).substr(2, 9)}`,
+      name: quickInputVal1.trim(),
+      category: 'health',
+      frequency: 'daily',
+      streak: 0,
+      bestStreak: 0,
+      reminderTime: 'none',
+      completions: [],
+      missedYesterday: false
+    }
+    const current = JSON.parse(localStorage.getItem('sololifeos_quick_habits') || '[]')
+    localStorage.setItem('sololifeos_quick_habits', JSON.stringify([...current, newHabit]))
+    addToast(`Habit "${newHabit.name}" logged successfully!`, 'success')
+    setQuickInputVal1('')
+    setQuickAddType('none')
+    setCommandPaletteOpen(false)
+  }
 
   // Refs for closing dropdowns on click outside
   const profileRef = useRef<HTMLDivElement>(null)
@@ -75,14 +184,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const handleLogout = () => {
     logout()
     navigate('/auth')
-  }
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      addToast(`Searching for "${searchQuery}"...`, 'info')
-      setSearchQuery('')
-    }
   }
 
   const markAllRead = () => {
@@ -230,16 +331,16 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           {/* Right: Search + Notifications + Profile */}
           <div className="flex items-center gap-3">
             {/* Search Input Bar */}
-            <form onSubmit={handleSearchSubmit} className="hidden sm:flex items-center relative">
+            <div className="hidden sm:flex items-center relative">
               <Search className="absolute left-3 text-slate-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search notes, goals..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-48 lg:w-64 pl-9 pr-4 py-1.5 bg-slate-100/80 hover:bg-slate-100 focus:bg-white border border-transparent focus:border-slate-200 rounded-xl text-xs focus:outline-hidden transition-all text-slate-700"
+                placeholder="Global Search (Ctrl + K)..."
+                readOnly
+                onClick={() => setCommandPaletteOpen(true)}
+                className="w-48 lg:w-64 pl-9 pr-4 py-1.5 bg-slate-100/80 hover:bg-slate-100 border border-transparent focus:border-slate-200 rounded-xl text-xs focus:outline-hidden transition-all text-slate-700 cursor-pointer"
               />
-            </form>
+            </div>
 
             {/* Notifications Menu */}
             <div className="relative" ref={notificationsRef}>
@@ -453,6 +554,213 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           </motion.div>
         </main>
       </div>
+
+      {/* Global Command Palette Overlay */}
+      <AnimatePresence>
+        {commandPaletteOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => {
+                setCommandPaletteOpen(false)
+                setQuickAddType('none')
+              }}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50"
+            />
+
+            {/* Palette Container */}
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -20, scale: 0.95 }}
+              className="fixed top-24 left-1/2 -translate-x-1/2 w-full max-w-lg bg-white/90 backdrop-blur-md border border-slate-200/50 rounded-3xl shadow-2xl z-50 overflow-hidden"
+            >
+              {quickAddType === 'none' ? (
+                <div className="p-4 space-y-4">
+                  {/* Search Bar */}
+                  <div className="relative flex items-center">
+                    <Search className="absolute left-4 text-slate-400 w-5 h-5" />
+                    <input
+                      type="text"
+                      placeholder="Type a command or module name..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      autoFocus
+                      className="w-full pl-12 pr-4 py-3 bg-slate-100/50 hover:bg-slate-100/80 rounded-2xl text-sm focus:outline-hidden text-slate-800 font-medium"
+                    />
+                  </div>
+
+                  {/* Actions & Modules */}
+                  <div className="space-y-2">
+                    <h5 className="text-[10px] uppercase font-bold tracking-wider text-slate-400 px-2">Quick Actions</h5>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => { setQuickAddType('task'); setQuickInputVal1(''); }}
+                        className="p-3 bg-slate-50 hover:bg-sky-50/50 border border-slate-100 rounded-2xl text-left cursor-pointer transition-colors"
+                      >
+                        <div className="font-bold text-slate-800 text-xs">📝 Quick Add Task</div>
+                        <div className="text-[9px] text-slate-400 mt-0.5">Add task to your checklist</div>
+                      </button>
+                      <button
+                        onClick={() => { setQuickAddType('note'); setQuickInputVal1(''); setQuickInputVal2(''); }}
+                        className="p-3 bg-slate-50 hover:bg-pink-50/50 border border-slate-100 rounded-2xl text-left cursor-pointer transition-colors"
+                      >
+                        <div className="font-bold text-slate-800 text-xs">📄 Quick Add Note</div>
+                        <div className="text-[9px] text-slate-400 mt-0.5">Write a quick thoughts card</div>
+                      </button>
+                      <button
+                        onClick={() => { setQuickAddType('expense'); setQuickInputVal1(''); setQuickInputVal2(''); }}
+                        className="p-3 bg-slate-50 hover:bg-amber-50/50 border border-slate-100 rounded-2xl text-left cursor-pointer transition-colors"
+                      >
+                        <div className="font-bold text-slate-800 text-xs">💰 Log Expense</div>
+                        <div className="text-[9px] text-slate-400 mt-0.5">Track today cash purchases</div>
+                      </button>
+                      <button
+                        onClick={() => { setQuickAddType('habit'); setQuickInputVal1(''); }}
+                        className="p-3 bg-slate-50 hover:bg-indigo-50/50 border border-slate-100 rounded-2xl text-left cursor-pointer transition-colors"
+                      >
+                        <div className="font-bold text-slate-800 text-xs">✨ Track Habit</div>
+                        <div className="text-[9px] text-slate-400 mt-0.5">Add new daily checkbox habit</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Modules Jumps */}
+                  <div className="space-y-1">
+                    <h5 className="text-[10px] uppercase font-bold tracking-wider text-slate-400 px-2 mb-2">Jump to Modules</h5>
+                    <div className="max-h-48 overflow-y-auto space-y-1 scrollbar-thin">
+                      {navItems
+                        .filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                        .map(item => {
+                          const Icon = item.icon
+                          return (
+                            <button
+                              key={item.path}
+                              onClick={() => {
+                                navigate(item.path)
+                                setCommandPaletteOpen(false)
+                              }}
+                              className="w-full flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl text-left text-xs font-semibold text-slate-700 cursor-pointer transition-colors"
+                            >
+                              <Icon size={16} className="text-slate-400" />
+                              <span>{item.name}</span>
+                            </button>
+                          )
+                        })}
+                    </div>
+                  </div>
+
+                  {/* Footer metadata info */}
+                  <div className="text-[10px] text-slate-400 flex justify-between border-t border-slate-100 pt-3 px-2">
+                    <span>Press <kbd className="px-1 py-0.5 bg-slate-100 rounded-sm font-black">Esc</kbd> to exit</span>
+                    <span>Use <kbd className="px-1 py-0.5 bg-slate-100 rounded-sm font-black">Ctrl + K</kbd> anywhere</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-5 space-y-4">
+                  {quickAddType === 'task' && (
+                    <form onSubmit={handleQuickAddTask} className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-extrabold text-slate-800 text-sm">📝 Create Task</h4>
+                        <button type="button" onClick={() => setQuickAddType('none')} className="text-slate-400 hover:text-slate-600 text-xs">Back</button>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="What needs to be done?"
+                        value={quickInputVal1}
+                        onChange={(e) => setQuickInputVal1(e.target.value)}
+                        autoFocus
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-hidden text-slate-800"
+                      />
+                      <Button type="submit" size="sm" className="w-full">
+                        Queue Task
+                      </Button>
+                    </form>
+                  )}
+
+                  {quickAddType === 'note' && (
+                    <form onSubmit={handleQuickAddNote} className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-extrabold text-slate-800 text-sm">📄 Quick Note</h4>
+                        <button type="button" onClick={() => setQuickAddType('none')} className="text-slate-400 hover:text-slate-600 text-xs">Back</button>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Note Title..."
+                        value={quickInputVal1}
+                        onChange={(e) => setQuickInputVal1(e.target.value)}
+                        autoFocus
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-hidden text-slate-800 font-bold"
+                      />
+                      <textarea
+                        placeholder="Write down ideas, checklists, markdown content..."
+                        value={quickInputVal2}
+                        onChange={(e) => setQuickInputVal2(e.target.value)}
+                        rows={3}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-hidden text-slate-800 resize-none"
+                      />
+                      <Button type="submit" size="sm" className="w-full">
+                        Queue Note
+                      </Button>
+                    </form>
+                  )}
+
+                  {quickAddType === 'expense' && (
+                    <form onSubmit={handleQuickAddExpense} className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-extrabold text-slate-800 text-sm">💰 Log Expense</h4>
+                        <button type="button" onClick={() => setQuickAddType('none')} className="text-slate-400 hover:text-slate-600 text-xs">Back</button>
+                      </div>
+                      <input
+                        type="number"
+                        placeholder="Amount ($)..."
+                        value={quickInputVal1}
+                        onChange={(e) => setQuickInputVal1(e.target.value)}
+                        autoFocus
+                        step="0.01"
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-hidden text-slate-800 font-black"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Expense Description (e.g. Lunch)..."
+                        value={quickInputVal2}
+                        onChange={(e) => setQuickInputVal2(e.target.value)}
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-hidden text-slate-800"
+                      />
+                      <Button type="submit" size="sm" className="w-full">
+                        Queue Expense
+                      </Button>
+                    </form>
+                  )}
+
+                  {quickAddType === 'habit' && (
+                    <form onSubmit={handleQuickAddHabit} className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-extrabold text-slate-800 text-sm">✨ Track Habit</h4>
+                        <button type="button" onClick={() => setQuickAddType('none')} className="text-slate-400 hover:text-slate-600 text-xs">Back</button>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Habit description (e.g. Read books)..."
+                        value={quickInputVal1}
+                        onChange={(e) => setQuickInputVal1(e.target.value)}
+                        autoFocus
+                        className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-hidden text-slate-800"
+                      />
+                      <Button type="submit" size="sm" className="w-full">
+                        Queue Habit
+                      </Button>
+                    </form>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

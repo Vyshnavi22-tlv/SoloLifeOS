@@ -108,6 +108,20 @@ export const Habits: React.FC = () => {
     }
   ])
 
+  React.useEffect(() => {
+    try {
+      const stored = localStorage.getItem('sololifeos_quick_habits')
+      if (stored) {
+        const quickHabits = JSON.parse(stored) as Habit[]
+        if (quickHabits.length > 0) {
+          setHabits(prev => [...quickHabits, ...prev])
+          localStorage.removeItem('sololifeos_quick_habits')
+          addToast(`Imported ${quickHabits.length} quick-added habits!`, 'success')
+        }
+      }
+    } catch {}
+  }, [addToast])
+
   // View States
   const [activeTab, setActiveTab] = useState<'daily' | 'weekly'>('daily')
   const [isModalOpen, setIsModalOpen] = useState(false)

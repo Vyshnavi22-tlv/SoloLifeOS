@@ -67,6 +67,20 @@ export const Finance: React.FC = () => {
     { id: 's-2', name: 'Emergency Reserve', target: 5000, saved: 2500 }
   ])
 
+  React.useEffect(() => {
+    try {
+      const stored = localStorage.getItem('sololifeos_quick_expenses')
+      if (stored) {
+        const quickExps = JSON.parse(stored) as Transaction[]
+        if (quickExps.length > 0) {
+          setTransactions(prev => [...quickExps, ...prev])
+          localStorage.removeItem('sololifeos_quick_expenses')
+          addToast(`Imported ${quickExps.length} quick-added transactions!`, 'success')
+        }
+      }
+    } catch {}
+  }, [addToast])
+
   // View Filter states
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all')

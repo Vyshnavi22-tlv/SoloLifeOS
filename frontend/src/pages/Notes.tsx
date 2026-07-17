@@ -36,7 +36,6 @@ interface Note {
 export const Notes: React.FC = () => {
   const { addToast } = useToastStore()
 
-  // Initial Folders List
   const [folders, setFolders] = useState<string[]>(['All Notes', 'Work', 'Ideas', 'Personal'])
   const [activeFolder, setActiveFolder] = useState('All Notes')
   const [newFolderName, setNewFolderName] = useState('')
@@ -79,6 +78,20 @@ export const Notes: React.FC = () => {
       versions: []
     }
   ])
+
+  React.useEffect(() => {
+    try {
+      const stored = localStorage.getItem('sololifeos_quick_notes')
+      if (stored) {
+        const quickNotes = JSON.parse(stored) as Note[]
+        if (quickNotes.length > 0) {
+          setNotes(prev => [...quickNotes, ...prev])
+          localStorage.removeItem('sololifeos_quick_notes')
+          addToast(`Imported ${quickNotes.length} quick-added notes!`, 'success')
+        }
+      }
+    } catch {}
+  }, [addToast])
 
   // Selected Note Editor State
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
