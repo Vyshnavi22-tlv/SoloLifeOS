@@ -18,6 +18,22 @@ const queryClient = new QueryClient({
 // Auto-register service worker
 registerSW({ immediate: true })
 
+// Production error telemetry
+window.addEventListener('error', (event) => {
+  const dsn = import.meta.env.VITE_SENTRY_DSN
+  if (dsn) {
+    const errorData = {
+      message: event.message,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+      stack: event.error?.stack || '',
+      timestamp: Date.now()
+    }
+    console.warn('[Sentry Telemetry Exception]:', errorData)
+  }
+})
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>

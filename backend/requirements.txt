@@ -13,3 +13,5 @@ bcrypt>=4.1.2
 openai>=1.14.1
 langchain>=0.1.12
 langchain-openai>=0.0.8
+sentry-sdk[fastapi]>=2.0.0
+

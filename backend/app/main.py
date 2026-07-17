@@ -5,9 +5,16 @@ from app.core.logging_config import setup_logging
 from app.core.exceptions import AppException, app_exception_handler
 from app.api.v1.api import api_router
 from app.core.middleware import SecurityMiddleware
+import sentry_sdk
 
 # Setup structured logging
 setup_logging()
+
+if settings.SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        traces_sample_rate=1.0,
+    )
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
