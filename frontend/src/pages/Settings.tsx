@@ -86,6 +86,96 @@ export const Settings: React.FC = () => {
     }
   })
 
+  // Alarms & Scheduled Reminders State
+  const [alarms, setAlarms] = useState<{ id: string; name: string; time: string; enabled: boolean }[]>(() => {
+    try {
+      const stored = localStorage.getItem('sololifeos_alarms')
+      return stored ? JSON.parse(stored) : [
+        { id: '1', name: '🌸 Morning Meditation Routine', time: '08:30', enabled: true },
+        { id: '2', name: '🏋️ Hydration Alert: Drink 3L Water', time: '14:00', enabled: true }
+      ]
+    } catch {
+      return []
+    }
+  })
+
+  const [newAlarmName, setNewAlarmName] = useState('')
+  const [newAlarmTime, setNewAlarmTime] = useState('09:00')
+
+  const saveAlarmsToStorage = (updatedAlarms: typeof alarms) => {
+    setAlarms(updatedAlarms)
+    localStorage.setItem('sololifeos_alarms', JSON.stringify(updatedAlarms))
+  }
+
+  const handleAddAlarm = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newAlarmName.trim()) {
+      addToast('Please enter an alarm name', 'warning')
+      return
+    }
+    const newAlarm = {
+      id: `alarm-${Math.random().toString(36).substr(2, 9)}`,
+      name: newAlarmName.trim(),
+      time: newAlarmTime,
+      enabled: true
+    }
+    const updated = [...alarms, newAlarm]
+    saveAlarmsToStorage(updated)
+    setNewAlarmName('')
+    addToast('New reminder scheduled!', 'success')
+  }
+
+  const toggleAlarm = (id: string) => {
+    const updated = alarms.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a))
+    saveAlarmsToStorage(updated)
+    addToast('Alarm status toggled', 'success')
+  }
+
+  const deleteAlarm = (id: string) => {
+    const updated = alarms.filter((a) => a.id !== id)
+    saveAlarmsToStorage(updated)
+    addToast('Alarm reminder deleted', 'error')
+  }
+
+  const requestBrowserNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      addToast('Browser notifications not supported in this browser.', 'warning')
+      return
+    }
+    const permission = await Notification.requestPermission()
+    if (permission === 'granted') {
+      addToast('Browser notifications activated successfully!', 'success')
+      new Notification('SoloLife OS', {
+        body: 'Alarms and reminders are successfully active!',
+        icon: '/favicon.ico'
+      })
+    } else {
+      addToast('Browser notifications permission denied.', 'warning')
+    }
+  }
+
+  const triggerDailySummaryNotification = () => {
+    addToast('Generating Daily Summary Digest...', 'success')
+    setTimeout(() => {
+      const summaryText = '📋 Daily Summary: 3 active tasks, 1 study session, 2 goals in progress.'
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('SoloLife OS: Daily Summary', {
+          body: summaryText,
+          icon: '/favicon.ico'
+        })
+      } else {
+        addToast(`[SUMMARY ALERT]: ${summaryText}`, 'info')
+      }
+    }, 1000)
+  }
+
+  const triggerSimulatedEmailNotification = () => {
+    addToast('Simulating email digest SMTP dispatch...', 'success')
+    setTimeout(() => {
+      addToast(`📧 Daily digest email sent successfully to ${user?.email || 'user@example.com'}!`, 'success')
+    }, 1200)
+  }
+
   // Handlers
   const onProfileSubmit = (data: ProfileFormValues) => {
     if (user) {
@@ -342,6 +432,92 @@ export const Settings: React.FC = () => {
                   />
                   <span>Weekly Summary Insights</span>
                 </label>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Scheduled Reminders & Alarm Engine Manager */}
+        <Card variant="white" className="space-y-6">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+            <Bell className="text-sky-500 w-5 h-5" />
+            <h2 className="text-lg font-bold text-slate-800">Alarms & Reminders Manager</h2>
+          </div>
+
+          <div className="space-y-4">
+            <Button
+              onClick={requestBrowserNotificationPermission}
+              variant="secondary"
+              size="sm"
+              className="w-full text-xs"
+            >
+              Request Browser Notification Permission
+            </Button>
+
+            <div className="flex gap-2 w-full justify-between pt-1 border-t border-slate-50">
+              <Button onClick={triggerDailySummaryNotification} variant="secondary" size="sm" className="flex-1 text-[10px] py-1">
+                Trigger Daily Summary
+              </Button>
+              <Button onClick={triggerSimulatedEmailNotification} variant="secondary" size="sm" className="flex-1 text-[10px] py-1">
+                Trigger Email Digest
+              </Button>
+            </div>
+
+            {/* Schedule New Alarm form */}
+            <form onSubmit={handleAddAlarm} className="space-y-3 pt-3 border-t border-slate-50">
+              <h4 className="font-bold text-slate-700 text-xs">Schedule Custom Reminder</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  placeholder="Drink Water, Study session..."
+                  value={newAlarmName}
+                  onChange={(e) => setNewAlarmName(e.target.value)}
+                  className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-hidden text-slate-850"
+                />
+                <input
+                  type="time"
+                  value={newAlarmTime}
+                  onChange={(e) => setNewAlarmTime(e.target.value)}
+                  className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-hidden text-slate-850 font-bold"
+                />
+              </div>
+              <Button type="submit" size="sm" className="w-full">
+                Add Alarm Reminder
+              </Button>
+            </form>
+
+            {/* Active Alarms Ledger */}
+            <div className="space-y-2 pt-3 border-t border-slate-50">
+              <h4 className="font-bold text-slate-700 text-xs">Active Scheduled Alarms</h4>
+              <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-thin">
+                {alarms.length === 0 ? (
+                  <p className="text-[10px] text-slate-400 italic text-center py-4">No active reminders configured.</p>
+                ) : (
+                  alarms.map((a) => (
+                    <div key={a.id} className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl flex justify-between items-center text-xs font-semibold text-slate-650">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={a.enabled}
+                          onChange={() => toggleAlarm(a.id)}
+                          className="rounded-sm accent-sky-500 cursor-pointer"
+                        />
+                        <span className={a.enabled ? 'text-slate-800' : 'line-through text-slate-400'}>
+                          {a.name}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-slate-800">{a.time}</span>
+                        <button
+                          onClick={() => deleteAlarm(a.id)}
+                          className="text-slate-350 hover:text-rose-500 cursor-pointer transition-colors"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

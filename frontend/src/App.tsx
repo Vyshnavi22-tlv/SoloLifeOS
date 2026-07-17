@@ -20,6 +20,7 @@ import { Analytics } from './pages/Analytics'
 import { Settings } from './pages/Settings'
 import { Tasks } from './pages/Tasks'
 import { AiAssistant } from './pages/AiAssistant'
+import { useToastStore } from './stores/toastStore'
 import { ToastContainer } from './components/ui/Toast'
 
 
@@ -27,10 +28,45 @@ function App() {
   const theme = useThemeStore((state) => state.theme)
   const initializeAuth = useAuthStore((state) => state.initializeAuth)
 
+  const addToast = useToastStore((state) => state.addToast)
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     initializeAuth()
   }, [theme, initializeAuth])
+
+  useEffect(() => {
+    let lastFiredMin = ''
+
+    const interval = setInterval(() => {
+      const now = new Date()
+      const timeStr = now.toTimeString().substring(0, 5) // "HH:MM"
+      if (timeStr === lastFiredMin) return
+
+      try {
+        const stored = localStorage.getItem('sololifeos_alarms')
+        if (stored) {
+          const alarms = JSON.parse(stored) as { id: string; name: string; time: string; enabled: boolean }[]
+          const activeAlarms = alarms.filter((a) => a.enabled && a.time === timeStr)
+
+          activeAlarms.forEach((alarm) => {
+            lastFiredMin = timeStr
+            addToast(`⏰ Reminder: ${alarm.name}`, 'info')
+            if ('Notification' in window && Notification.permission === 'granted') {
+              new Notification('SoloLife OS Reminder', {
+                body: alarm.name,
+                icon: '/favicon.ico'
+              })
+            }
+          })
+        }
+      } catch (e) {
+        // Safeguard
+      }
+    }, 15000)
+
+    return () => clearInterval(interval)
+  }, [addToast])
 
   return (
     <>
