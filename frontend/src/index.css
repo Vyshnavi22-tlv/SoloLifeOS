@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-blue: #e0f2fe; /* Light Blue */
+  --color-primary-pink: #fce7f3; /* Light Pink */
+  --color-accent-lavender: #f3e8ff; /* Lavender */
+  --color-accent-gray: #f1f5f9; /* Soft Gray */
+
+  --color-brand-blue-dark: #0369a1;
+  --color-brand-pink-dark: #be185d;
+  --color-brand-lavender-dark: #6b21a8;
+
+  --font-sans: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+/* Custom base styles */
+@layer base {
+  body {
+    background-color: #fafafa;
+    color: #1e293b;
+    font-family: var(--font-sans);
+    min-height: 100vh;
+  }
+}
+
+/* Glassmorphism helpers */
+.glass-card {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+}
+
+.glass-card-pink {
+  background: rgba(253, 244, 245, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(253, 244, 245, 0.5);
+  box-shadow: 0 10px 30px -10px rgba(135, 31, 100, 0.04);
+}
+
+.glass-card-blue {
+  background: rgba(240, 249, 255, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(240, 249, 255, 0.5);
+  box-shadow: 0 10px 30px -10px rgba(31, 100, 135, 0.04);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.bg-gradient-pink-blue {
+  background: linear-gradient(135deg, #fce7f3 0%, #e0f2fe 100%);
+}
+
+.bg-gradient-pink-lavender {
+  background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 100%);
+}
+
+.bg-gradient-blue-lavender {
+  background: linear-gradient(135deg, #e0f2fe 0%, #f3e8ff 100%);
+}
