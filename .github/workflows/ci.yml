@@ -1,0 +1,75 @@
+name: SoloLife OS CI Test Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sololifeos
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      # 1. Checkout codebase
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Python Environment & Run Backend Tests
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest httpx
+
+      - name: Run Pytest suite
+        env:
+          SQLALCHEMY_DATABASE_URI: "postgresql://postgres:postgres@localhost:5432/sololifeos"
+          SECRET_KEY: "ci_secret_key"
+        run: |
+          cd backend
+          python -m pytest
+
+      # 3. Set up Node.js Environment & Build Frontend
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run Frontend Lints
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Build Frontend Application
+        run: |
+          cd frontend
+          npm run build
