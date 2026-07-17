@@ -1,12 +1,20 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.core.logging_config import setup_logging
+from app.core.exceptions import AppException, app_exception_handler
 from app.api.v1.api import api_router
+
+# Setup structured logging
+setup_logging()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
+
+# Register custom exception handler
+app.add_exception_handler(AppException, app_exception_handler)
 
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:
