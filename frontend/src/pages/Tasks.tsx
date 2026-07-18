@@ -20,6 +20,7 @@ import { Button } from '../components/ui/Button'
 import { Input, Select } from '../components/ui/Input'
 import { Dialog } from '../components/ui/Dialog'
 import { useToastStore } from '../stores/toastStore'
+import { saveUserData } from '../lib/persistence'
 
 interface SubTask {
   id: string
@@ -44,62 +45,74 @@ export const Tasks: React.FC = () => {
   const { addToast } = useToastStore()
 
   // Seed data
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: 'task-1',
-      title: 'Draft landing page design system',
-      description: 'Establish typography and color tokens for SoloLife UI.',
-      status: 'in_progress',
-      project: 'Work',
-      priority: 'high',
-      deadline: new Date().toISOString().split('T')[0],
-      labels: ['Design', 'UI'],
-      recurrence: 'none',
-      subtasks: [
-        { id: 'sub-1-1', text: 'Select color palettes', done: true },
-        { id: 'sub-1-2', text: 'Configure typography classes', done: false }
-      ]
-    },
-    {
-      id: 'task-2',
-      title: 'Weekly grocery shopping',
-      description: 'Buy fresh vegetables, milk, and eggs.',
-      status: 'todo',
-      project: 'Personal',
-      priority: 'low',
-      deadline: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-      labels: ['Chores'],
-      recurrence: 'weekly',
-      subtasks: []
-    },
-    {
-      id: 'task-3',
-      title: 'React 19 Hooks documentation',
-      description: 'Review improvements in useActionState and actions.',
-      status: 'todo',
-      project: 'Study',
-      priority: 'medium',
-      deadline: new Date(Date.now() + 172800000).toISOString().split('T')[0],
-      labels: ['Development'],
-      recurrence: 'none',
-      subtasks: [
-        { id: 'sub-3-1', text: 'Read React 19 blog post', done: true },
-        { id: 'sub-3-2', text: 'Write demo code sandbox', done: false }
-      ]
-    },
-    {
-      id: 'task-4',
-      title: 'Complete fitness workout logs',
-      description: 'Track daily running distance and gym logs.',
-      status: 'done',
-      project: 'Personal',
-      priority: 'medium',
-      deadline: new Date().toISOString().split('T')[0],
-      labels: ['Fitness'],
-      recurrence: 'daily',
-      subtasks: []
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    const cached = localStorage.getItem('sololifeos_tasks')
+    if (cached) {
+      try {
+        return JSON.parse(cached)
+      } catch {}
     }
-  ])
+    return [
+      {
+        id: 'task-1',
+        title: 'Draft landing page design system',
+        description: 'Establish typography and color tokens for SoloLife UI.',
+        status: 'in_progress',
+        project: 'Work',
+        priority: 'high',
+        deadline: new Date().toISOString().split('T')[0],
+        labels: ['Design', 'UI'],
+        recurrence: 'none',
+        subtasks: [
+          { id: 'sub-1-1', text: 'Select color palettes', done: true },
+          { id: 'sub-1-2', text: 'Configure typography classes', done: false }
+        ]
+      },
+      {
+        id: 'task-2',
+        title: 'Weekly grocery shopping',
+        description: 'Buy fresh vegetables, milk, and eggs.',
+        status: 'todo',
+        project: 'Personal',
+        priority: 'low',
+        deadline: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        labels: ['Chores'],
+        recurrence: 'weekly',
+        subtasks: []
+      },
+      {
+        id: 'task-3',
+        title: 'React 19 Hooks documentation',
+        description: 'Review improvements in useActionState and actions.',
+        status: 'todo',
+        project: 'Study',
+        priority: 'medium',
+        deadline: new Date(Date.now() + 172800000).toISOString().split('T')[0],
+        labels: ['Development'],
+        recurrence: 'none',
+        subtasks: [
+          { id: 'sub-3-1', text: 'Read React 19 blog post', done: true },
+          { id: 'sub-3-2', text: 'Write demo code sandbox', done: false }
+        ]
+      },
+      {
+        id: 'task-4',
+        title: 'Complete fitness workout logs',
+        description: 'Track daily running distance and gym logs.',
+        status: 'done',
+        project: 'Personal',
+        priority: 'medium',
+        deadline: new Date().toISOString().split('T')[0],
+        labels: ['Fitness'],
+        recurrence: 'daily',
+        subtasks: []
+      }
+    ]
+  })
+
+  React.useEffect(() => {
+    saveUserData('tasks', tasks)
+  }, [tasks])
 
   React.useEffect(() => {
     try {

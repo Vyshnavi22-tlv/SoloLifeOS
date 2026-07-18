@@ -8,6 +8,7 @@ import { Sparkles, Eye, EyeOff, KeyRound, ArrowLeft } from 'lucide-react'
 import { EnvelopeIcon, LockClosedIcon, UserIcon } from '@heroicons/react/24/outline'
 import { useAuthStore } from '../stores/authStore'
 import { useToastStore } from '../stores/toastStore'
+import { fetchAndRestoreUserData } from '../lib/persistence'
 
 // Zod Validation Schema with optional fields to support multiple auth modes
 const authSchema = z.object({
@@ -107,7 +108,7 @@ export const Auth: React.FC = () => {
         }, 800)
       } else {
         // Simulating Login/Register Auth
-        setTimeout(() => {
+        setTimeout(async () => {
           const mockUser = {
             id: 1,
             email: data.email,
@@ -120,6 +121,7 @@ export const Auth: React.FC = () => {
           const mockRefreshToken = 'mock-refresh-token-abc'
           
           login(mockToken, mockRefreshToken, mockUser, !!data.rememberMe)
+          await fetchAndRestoreUserData()
           setLocalLoading(false)
           addToast(mode === 'login' ? 'Welcome back!' : 'Account registered successfully!', 'success')
           navigate('/')

@@ -16,6 +16,7 @@ import { Button } from '../components/ui/Button'
 import { Input, Select } from '../components/ui/Input'
 import { Dialog } from '../components/ui/Dialog'
 import { useToastStore } from '../stores/toastStore'
+import { saveUserData } from '../lib/persistence'
 
 interface Habit {
   id: string
@@ -24,9 +25,9 @@ interface Habit {
   frequency: 'daily' | 'weekly'
   streak: number
   bestStreak: number
-  reminderTime: string // HH:MM or "none"
-  completions: string[] // Array of YYYY-MM-DD strings representing completed dates
-  missedYesterday: boolean // Flag to trigger recovery action
+  reminderTime: string // "HH:MM" or "none"
+  completions: string[] // ISO dates YYYY-MM-DD
+  missedYesterday: boolean
 }
 
 export const Habits: React.FC = () => {
@@ -54,59 +55,71 @@ export const Habits: React.FC = () => {
   const yesterdayStr = getYesterdayStr()
 
   // Seed data
-  const [habits, setHabits] = useState<Habit[]>([
-    {
-      id: 'h-1',
-      name: 'Morning Meditation (10m)',
-      category: 'mind',
-      frequency: 'daily',
-      streak: 8,
-      bestStreak: 15,
-      reminderTime: '08:00',
-      completions: [
-        todayStr,
-        yesterdayStr,
-        dateHistoryList[20],
-        dateHistoryList[21],
-        dateHistoryList[22],
-        dateHistoryList[23],
-        dateHistoryList[24],
-        dateHistoryList[25]
-      ],
-      missedYesterday: false
-    },
-    {
-      id: 'h-2',
-      name: 'Drink 3L of Water',
-      category: 'health',
-      frequency: 'daily',
-      streak: 0,
-      bestStreak: 30,
-      reminderTime: '12:00',
-      completions: [
-        dateHistoryList[20],
-        dateHistoryList[21],
-        dateHistoryList[22],
-        dateHistoryList[23],
-        dateHistoryList[24]
-      ],
-      missedYesterday: true // Triggers recovery button!
-    },
-    {
-      id: 'h-3',
-      name: 'Weekly Gym Strength Workout',
-      category: 'fitness',
-      frequency: 'weekly',
-      streak: 3,
-      bestStreak: 6,
-      reminderTime: '18:00',
-      completions: [
-        dateHistoryList[15],
-        dateHistoryList[22]
-      ],
-      missedYesterday: false
+  const [habits, setHabits] = useState<Habit[]>(() => {
+    const cached = localStorage.getItem('sololifeos_habits')
+    if (cached) {
+      try {
+        return JSON.parse(cached)
+      } catch {}
     }
-  ])
+    return [
+      {
+        id: 'h-1',
+        name: 'Morning Meditation (10m)',
+        category: 'mind',
+        frequency: 'daily',
+        streak: 8,
+        bestStreak: 15,
+        reminderTime: '08:00',
+        completions: [
+          todayStr,
+          yesterdayStr,
+          dateHistoryList[20],
+          dateHistoryList[21],
+          dateHistoryList[22],
+          dateHistoryList[23],
+          dateHistoryList[24],
+          dateHistoryList[25]
+        ],
+        missedYesterday: false
+      },
+      {
+        id: 'h-2',
+        name: 'Drink 3L of Water',
+        category: 'health',
+        frequency: 'daily',
+        streak: 0,
+        bestStreak: 30,
+        reminderTime: '12:00',
+        completions: [
+          dateHistoryList[20],
+          dateHistoryList[21],
+          dateHistoryList[22],
+          dateHistoryList[23],
+          dateHistoryList[24]
+        ],
+        missedYesterday: true // Triggers recovery button!
+      },
+      {
+        id: 'h-3',
+        name: 'Weekly Gym Strength Workout',
+        category: 'fitness',
+        frequency: 'weekly',
+        streak: 3,
+        bestStreak: 6,
+        reminderTime: '18:00',
+        completions: [
+          dateHistoryList[15],
+          dateHistoryList[22]
+        ],
+        missedYesterday: false
+      }
+    ]
+  })
+
+  React.useEffect(() => {
+    saveUserData('habits', habits)
+  }, [habits])
 
   React.useEffect(() => {
     try {

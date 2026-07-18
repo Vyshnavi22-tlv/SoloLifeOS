@@ -34,6 +34,40 @@ def test_export_user_data(client, test_user):
     assert data["user"]["email"] == test_user.email
     assert "modules" in data
 
+def test_get_and_put_user_data(client, test_user):
+    # Log in
+    login_res = client.post(
+        "/api/v1/auth/login/access-token",
+        data={"username": test_user.email, "password": "password123"}
+    )
+    token = login_res.json()["access_token"]
+
+    # Get empty user data first
+    response = client.get(
+        "/api/v1/users/me/data",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 200
+    assert response.json() == {}
+
+    # Put some user data
+    payload = {"tasks": [{"id": 1, "title": "Test Task"}]}
+    response = client.put(
+        "/api/v1/users/me/data",
+        headers={"Authorization": f"Bearer {token}"},
+        json=payload
+    )
+    assert response.status_code == 200
+    assert response.json() == payload
+
+    # Get updated user data
+    response = client.get(
+        "/api/v1/users/me/data",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 200
+    assert response.json() == payload
+
 def test_delete_user_account(client, test_user):
     # Log in
     login_res = client.post(

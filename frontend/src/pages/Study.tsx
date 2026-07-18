@@ -19,6 +19,7 @@ import { Input, Select } from '../components/ui/Input'
 import { Dialog } from '../components/ui/Dialog'
 import { useToastStore } from '../stores/toastStore'
 import { BarChart, LineChart } from '../components/ui/Chart'
+import { saveUserData } from '../lib/persistence'
 
 interface Assignment {
   id: string
@@ -46,31 +47,54 @@ interface Flashcard {
 export const Study: React.FC = () => {
   const { addToast } = useToastStore()
 
+  // Load study data from cache
+  const cachedStudy = (() => {
+    const cached = localStorage.getItem('sololifeos_study')
+    if (cached) {
+      try {
+        return JSON.parse(cached)
+      } catch {}
+    }
+    return null
+  })()
+
   // Seed Data
   const [subjects] = useState<string[]>(['Computer Science', 'Mathematics', 'Chemistry'])
 
-  const [assignments, setAssignments] = useState<Assignment[]>([
-    { id: 'a-1', subject: 'Computer Science', title: 'Write AST Parser in TS', deadline: '2026-07-20', done: false },
-    { id: 'a-2', subject: 'Mathematics', title: 'Linear Algebra homework #3', deadline: '2026-07-22', done: true },
-    { id: 'a-3', subject: 'Chemistry', title: 'Organic Chemistry Lab Report', deadline: '2026-07-25', done: false }
-  ])
-
-  const [exams, setExams] = useState<Exam[]>([
-    { id: 'e-1', subject: 'Computer Science', title: 'Data Structures midterm', date: '2026-08-05', targetGrade: 'A+' },
-    { id: 'e-2', subject: 'Mathematics', title: 'Calculus Final Exam', date: '2026-08-12', targetGrade: 'A' }
-  ])
-
-  const [flashcards, setFlashcards] = useState<Flashcard[]>([
-    { id: 'f-1', subject: 'Computer Science', question: 'What is a closure in JS?', answer: 'A closure is the combination of a function bundled together with references to its surrounding state.' },
-    { id: 'f-2', subject: 'Mathematics', question: 'State Euler\'s identity formula.', answer: 'e^(i*pi) + 1 = 0' },
-    { id: 'f-3', subject: 'Chemistry', question: 'What is the molecular weight of H2O?', answer: '18.015 g/mol' }
-  ])
-
-  const [studyHours, setStudyHours] = useState<Record<string, number>>({
-    'Computer Science': 8,
-    'Mathematics': 5,
-    'Chemistry': 3
+  const [assignments, setAssignments] = useState<Assignment[]>(() => {
+    return cachedStudy?.assignments || [
+      { id: 'a-1', subject: 'Computer Science', title: 'Write AST Parser in TS', deadline: '2026-07-20', done: false },
+      { id: 'a-2', subject: 'Mathematics', title: 'Linear Algebra homework #3', deadline: '2026-07-22', done: true },
+      { id: 'a-3', subject: 'Chemistry', title: 'Organic Chemistry Lab Report', deadline: '2026-07-25', done: false }
+    ]
   })
+
+  const [exams, setExams] = useState<Exam[]>(() => {
+    return cachedStudy?.exams || [
+      { id: 'e-1', subject: 'Computer Science', title: 'Data Structures midterm', date: '2026-08-05', targetGrade: 'A+' },
+      { id: 'e-2', subject: 'Mathematics', title: 'Calculus Final Exam', date: '2026-08-12', targetGrade: 'A' }
+    ]
+  })
+
+  const [flashcards, setFlashcards] = useState<Flashcard[]>(() => {
+    return cachedStudy?.flashcards || [
+      { id: 'f-1', subject: 'Computer Science', question: 'What is a closure in JS?', answer: 'A closure is the combination of a function bundled together with references to its surrounding state.' },
+      { id: 'f-2', subject: 'Mathematics', question: 'State Euler\'s identity formula.', answer: 'e^(i*pi) + 1 = 0' },
+      { id: 'f-3', subject: 'Chemistry', question: 'What is the molecular weight of H2O?', answer: '18.015 g/mol' }
+    ]
+  })
+
+  const [studyHours, setStudyHours] = useState<Record<string, number>>(() => {
+    return cachedStudy?.studyHours || {
+      'Computer Science': 8,
+      'Mathematics': 5,
+      'Chemistry': 3
+    }
+  })
+
+  React.useEffect(() => {
+    saveUserData('study', { assignments, exams, flashcards, studyHours })
+  }, [assignments, exams, flashcards, studyHours])
 
   // Navigation Tabs
   const [activeTab, setActiveTab] = useState<'overview' | 'timer' | 'flashcards' | 'analytics'>('overview')

@@ -16,6 +16,7 @@ import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { useToastStore } from '../stores/toastStore'
+import { saveUserData } from '../lib/persistence'
 
 interface JournalEntry {
   id: string
@@ -43,34 +44,46 @@ export const Journal: React.FC = () => {
   const yesterdayStr = getYesterdayStr()
 
   // Seed Entries
-  const [entries, setEntries] = useState<JournalEntry[]>([
-    {
-      id: 'j-1',
-      date: todayStr,
-      title: 'Productive Friday Workspace Sprint',
-      content: 'Finished scaffolding the core frontend pages. The calendar layout and sidebar look incredibly polished. Ready to build the journal modules next.',
-      mood: '😄',
-      gratitude: ['My coding assistant Antigravity', 'Hot hazelnut coffee', 'Solid design tokens'],
-      reflection: {
-        whatWentWell: 'Completed all target components without typescript errors.',
-        whatToImprove: 'Take regular screen breaks to avoid eye fatigue.'
-      },
-      aiSummary: 'You had a highly productive, focused day. You show deep gratitude for progress and tools, maintaining a positive mood. Reflection points to solid work habits but highlights a need for screen break pacing.'
-    },
-    {
-      id: 'j-2',
-      date: yesterdayStr,
-      title: 'Late Night Debugging Session',
-      content: 'Faced a few issues with Vite PWA virtual modules on Windows but resolved them by editing the tsconfig client compilation paths.',
-      mood: '😐',
-      gratitude: ['Vite hot module reloading', 'Cozy desk light', 'Peaceful evening silence'],
-      reflection: {
-        whatWentWell: 'Framer motion animations load smoothly without layout shift.',
-        whatToImprove: 'Set strict bedtime routines so I do not work past midnight.'
-      },
-      aiSummary: 'A neutral, technical day. You successfully navigated complex development issues. You find gratitude in subtle workstation details. Reflection suggests a focus on sleep schedule recovery.'
+  const [entries, setEntries] = useState<JournalEntry[]>(() => {
+    const cached = localStorage.getItem('sololifeos_journal')
+    if (cached) {
+      try {
+        return JSON.parse(cached)
+      } catch {}
     }
-  ])
+    return [
+      {
+        id: 'j-1',
+        date: todayStr,
+        title: 'Productive Friday Workspace Sprint',
+        content: 'Finished scaffolding the core frontend pages. The calendar layout and sidebar look incredibly polished. Ready to build the journal modules next.',
+        mood: '😄',
+        gratitude: ['My coding assistant Antigravity', 'Hot hazelnut coffee', 'Solid design tokens'],
+        reflection: {
+          whatWentWell: 'Completed all target components without typescript errors.',
+          whatToImprove: 'Take regular screen breaks to avoid eye fatigue.'
+        },
+        aiSummary: 'You had a highly productive, focused day. You show deep gratitude for progress and tools, maintaining a positive mood. Reflection points to solid work habits but highlights a need for screen break pacing.'
+      },
+      {
+        id: 'j-2',
+        date: yesterdayStr,
+        title: 'Late Night Debugging Session',
+        content: 'Faced a few issues with Vite PWA virtual modules on Windows but resolved them by editing the tsconfig client compilation paths.',
+        mood: '😐',
+        gratitude: ['Vite hot module reloading', 'Cozy desk light', 'Peaceful evening silence'],
+        reflection: {
+          whatWentWell: 'Framer motion animations load smoothly without layout shift.',
+          whatToImprove: 'Set strict bedtime routines so I do not work past midnight.'
+        },
+        aiSummary: 'A neutral, technical day. You successfully navigated complex development issues. You find gratitude in subtle workstation details. Reflection suggests a focus on sleep schedule recovery.'
+      }
+    ]
+  })
+
+  React.useEffect(() => {
+    saveUserData('journal', entries)
+  }, [entries])
 
   // Navigation States
   const [editorOpen, setEditorOpen] = useState(false)

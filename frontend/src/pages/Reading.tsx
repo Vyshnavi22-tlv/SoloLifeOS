@@ -12,6 +12,7 @@ import { Button } from '../components/ui/Button'
 import { Input, Select } from '../components/ui/Input'
 import { Dialog } from '../components/ui/Dialog'
 import { useToastStore } from '../stores/toastStore'
+import { saveUserData } from '../lib/persistence'
 
 interface ReadingNote {
   id: string
@@ -39,49 +40,68 @@ interface Book {
 export const Reading: React.FC = () => {
   const { addToast } = useToastStore()
 
-  // Seed Books
-  const [books, setBooks] = useState<Book[]>([
-    {
-      id: 'b-1',
-      title: 'Atomic Habits',
-      author: 'James Clear',
-      totalPages: 320,
-      currentPage: 145,
-      category: 'non-fiction',
-      status: 'reading',
-      notes: [
-        { id: 'rn-1-1', date: '2026-07-15', content: 'Loved the concept of 1% better every day. Small changes compound massively.' }
-      ]
-    },
-    {
-      id: 'b-2',
-      title: 'Zero to One',
-      author: 'Peter Thiel',
-      totalPages: 224,
-      currentPage: 224,
-      category: 'business',
-      status: 'completed',
-      notes: [
-        { id: 'rn-2-1', date: '2026-07-10', content: 'Thiels focus on building monopolies and avoiding standard competition is key.' }
-      ]
-    },
-    {
-      id: 'b-3',
-      title: 'Sapiens',
-      author: 'Yuval Noah Harari',
-      totalPages: 512,
-      currentPage: 0,
-      category: 'science',
-      status: 'to_read',
-      notes: []
+  // Load reading data from cache
+  const cachedReading = (() => {
+    const cached = localStorage.getItem('sololifeos_reading')
+    if (cached) {
+      try {
+        return JSON.parse(cached)
+      } catch {}
     }
-  ])
+    return null
+  })()
+
+  // Seed Books
+  const [books, setBooks] = useState<Book[]>(() => {
+    return cachedReading?.books || [
+      {
+        id: 'b-1',
+        title: 'Atomic Habits',
+        author: 'James Clear',
+        totalPages: 320,
+        currentPage: 145,
+        category: 'non-fiction',
+        status: 'reading',
+        notes: [
+          { id: 'rn-1-1', date: '2026-07-15', content: 'Loved the concept of 1% better every day. Small changes compound massively.' }
+        ]
+      },
+      {
+        id: 'b-2',
+        title: 'Zero to One',
+        author: 'Peter Thiel',
+        totalPages: 224,
+        currentPage: 224,
+        category: 'business',
+        status: 'completed',
+        notes: [
+          { id: 'rn-2-1', date: '2026-07-10', content: 'Thiels focus on building monopolies and avoiding standard competition is key.' }
+        ]
+      },
+      {
+        id: 'b-3',
+        title: 'Sapiens',
+        author: 'Yuval Noah Harari',
+        totalPages: 512,
+        currentPage: 0,
+        category: 'science',
+        status: 'to_read',
+        notes: []
+      }
+    ]
+  })
 
   // Seed Quotes
-  const [quotes, setQuotes] = useState<Quote[]>([
-    { id: 'q-1', bookTitle: 'Atomic Habits', text: 'You do not rise to the level of your goals. You fall to the level of your systems.' },
-    { id: 'q-2', bookTitle: 'Zero to One', text: 'What important truth do very few people agree with you on?' }
-  ])
+  const [quotes, setQuotes] = useState<Quote[]>(() => {
+    return cachedReading?.quotes || [
+      { id: 'q-1', bookTitle: 'Atomic Habits', text: 'You do not rise to the level of your goals. You fall to the level of your systems.' },
+      { id: 'q-2', bookTitle: 'Zero to One', text: 'What important truth do very few people agree with you on?' }
+    ]
+  })
+
+  React.useEffect(() => {
+    saveUserData('reading', { books, quotes })
+  }, [books, quotes])
 
   // Reading Goals
   const [yearlyGoal] = useState({ target: 12, completed: 3 }) // 3 completed books

@@ -72,6 +72,31 @@ def delete_user_me(
     db.commit()
     return {"message": "Account deleted successfully"}
 
+@router.get("/me/data")
+def get_user_data_me(
+    current_user: User = Depends(deps.get_current_user)
+) -> Any:
+    """
+    Get current user's persistent data (tasks, notes, habits, etc.)
+    """
+    return current_user.userdata or {}
+
+@router.put("/me/data")
+def update_user_data_me(
+    *,
+    db: Session = Depends(get_db),
+    data: dict,
+    current_user: User = Depends(deps.get_current_user)
+) -> Any:
+    """
+    Update current user's persistent data.
+    """
+    current_user.userdata = data
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    return current_user.userdata or {}
+
 @router.get("/me/export")
 def export_user_data(
     current_user: User = Depends(deps.get_current_user)
@@ -79,6 +104,7 @@ def export_user_data(
     """
     Export current user data in JSON format.
     """
+    userdata = current_user.userdata or {}
     return {
         "user": {
             "email": current_user.email,
@@ -86,13 +112,20 @@ def export_user_data(
             "created_at": str(current_user.created_at)
         },
         "modules": {
-            "goals": [],
-            "habits": [],
-            "notes": [],
-            "finances": []
+            "goals": userdata.get("goals", []),
+            "habits": userdata.get("habits", []),
+            "notes": userdata.get("notes", []),
+            "finances": userdata.get("finances", []),
+            "tasks": userdata.get("tasks", []),
+            "fitness": userdata.get("fitness", []),
+            "pomodoro": userdata.get("pomodoro", []),
+            "journal": userdata.get("journal", []),
+            "study": userdata.get("study", []),
+            "reading": userdata.get("reading", []),
+            "alarms": userdata.get("alarms", []),
         },
-        "preferences": {
+        "preferences": userdata.get("preferences", {
             "language": "en",
             "timezone": "UTC"
-        }
+        })
     }

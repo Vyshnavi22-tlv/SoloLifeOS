@@ -8,6 +8,7 @@ import type { ThemeType } from '../stores/themeStore'
 import { useToastStore } from '../stores/toastStore'
 import { useAuthStore } from '../stores/authStore'
 import { useForm } from 'react-hook-form'
+import { saveUserData } from '../lib/persistence'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
@@ -105,6 +106,7 @@ export const Settings: React.FC = () => {
   const saveAlarmsToStorage = (updatedAlarms: typeof alarms) => {
     setAlarms(updatedAlarms)
     localStorage.setItem('sololifeos_alarms', JSON.stringify(updatedAlarms))
+    saveUserData('alarms', updatedAlarms)
   }
 
   const handleAddAlarm = (e: React.FormEvent) => {

@@ -16,6 +16,7 @@ import { Button } from '../components/ui/Button'
 import { Input, Select } from '../components/ui/Input'
 import { Dialog } from '../components/ui/Dialog'
 import { useToastStore } from '../stores/toastStore'
+import { saveUserData } from '../lib/persistence'
 
 interface CalendarEvent {
   id: string
@@ -32,48 +33,60 @@ export const Calendar: React.FC = () => {
   const { addToast } = useToastStore()
 
   // Initial Seed Events
-  const [events, setEvents] = useState<CalendarEvent[]>([
-    {
-      id: '1',
-      title: 'Scaffolding Project Checkpoint',
-      description: 'Review database schemas and frontend routing config.',
-      date: new Date().toISOString().split('T')[0],
-      time: '10:00',
-      category: 'work',
-      recurrence: 'none',
-      reminder: '15m'
-    },
-    {
-      id: '2',
-      title: 'Daily Evening Jog',
-      description: 'Run 5km in the local park.',
-      date: new Date().toISOString().split('T')[0],
-      time: '18:00',
-      category: 'fitness',
-      recurrence: 'daily',
-      reminder: '5m'
-    },
-    {
-      id: '3',
-      title: 'React Study Group',
-      description: 'Learn hooks and virtual DOM mechanics.',
-      date: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
-      time: '14:30',
-      category: 'study',
-      recurrence: 'weekly',
-      reminder: '1h'
-    },
-    {
-      id: '4',
-      title: 'Dinner with Parents',
-      description: 'Family gathering at restaurant.',
-      date: new Date(Date.now() + 172800000).toISOString().split('T')[0], // Day after tomorrow
-      time: '19:00',
-      category: 'personal',
-      recurrence: 'none',
-      reminder: '1d'
+  const [events, setEvents] = useState<CalendarEvent[]>(() => {
+    const cached = localStorage.getItem('sololifeos_calendar')
+    if (cached) {
+      try {
+        return JSON.parse(cached)
+      } catch {}
     }
-  ])
+    return [
+      {
+        id: '1',
+        title: 'Scaffolding Project Checkpoint',
+        description: 'Review database schemas and frontend routing config.',
+        date: new Date().toISOString().split('T')[0],
+        time: '10:00',
+        category: 'work',
+        recurrence: 'none',
+        reminder: '15m'
+      },
+      {
+        id: '2',
+        title: 'Daily Evening Jog',
+        description: 'Run 5km in the local park.',
+        date: new Date().toISOString().split('T')[0],
+        time: '18:00',
+        category: 'fitness',
+        recurrence: 'daily',
+        reminder: '5m'
+      },
+      {
+        id: '3',
+        title: 'React Study Group',
+        description: 'Learn hooks and virtual DOM mechanics.',
+        date: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
+        time: '14:30',
+        category: 'study',
+        recurrence: 'weekly',
+        reminder: '1h'
+      },
+      {
+        id: '4',
+        title: 'Dinner with Parents',
+        description: 'Family gathering at restaurant.',
+        date: new Date(Date.now() + 172800000).toISOString().split('T')[0], // Day after tomorrow
+        time: '19:00',
+        category: 'personal',
+        recurrence: 'none',
+        reminder: '1d'
+      }
+    ]
+  })
+
+  React.useEffect(() => {
+    saveUserData('calendar', events)
+  }, [events])
 
   // View States
   const [currentView, setCurrentView] = useState<'month' | 'week' | 'day' | 'agenda'>('month')

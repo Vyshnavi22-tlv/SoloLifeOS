@@ -18,6 +18,7 @@ import { Input, Select } from '../components/ui/Input'
 import { Dialog } from '../components/ui/Dialog'
 import { useToastStore } from '../stores/toastStore'
 import { BarChart, LineChart } from '../components/ui/Chart'
+import { saveUserData } from '../lib/persistence'
 
 interface Transaction {
   id: string
@@ -44,28 +45,49 @@ export const Finance: React.FC = () => {
   const { addToast } = useToastStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Load finances from cache
+  const cachedFinances = (() => {
+    const cached = localStorage.getItem('sololifeos_finances')
+    if (cached) {
+      try {
+        return JSON.parse(cached)
+      } catch {}
+    }
+    return null
+  })()
+
   // Seed Transactions
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    { id: 't-1', date: '2026-07-15', description: 'Monthly Freelance Project', type: 'income', category: 'Freelance', amount: 2500 },
-    { id: 't-2', date: '2026-07-16', description: 'Whole Foods Groceries', type: 'expense', category: 'Food', amount: 124.50 },
-    { id: 't-3', date: '2026-07-16', description: 'Electric Bill Payment', type: 'expense', category: 'Utilities', amount: 85.00 },
-    { id: 't-4', date: '2026-07-17', description: 'Office Chair', type: 'expense', category: 'Office', amount: 180.00 },
-    { id: 't-5', date: '2026-07-17', description: 'Part-time Tutoring', type: 'income', category: 'Freelance', amount: 350.00 }
-  ])
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    return cachedFinances?.transactions || [
+      { id: 't-1', date: '2026-07-15', description: 'Monthly Freelance Project', type: 'income', category: 'Freelance', amount: 2500 },
+      { id: 't-2', date: '2026-07-16', description: 'Whole Foods Groceries', type: 'expense', category: 'Food', amount: 124.50 },
+      { id: 't-3', date: '2026-07-16', description: 'Electric Bill Payment', type: 'expense', category: 'Utilities', amount: 85.00 },
+      { id: 't-4', date: '2026-07-17', description: 'Office Chair', type: 'expense', category: 'Office', amount: 180.00 },
+      { id: 't-5', date: '2026-07-17', description: 'Part-time Tutoring', type: 'income', category: 'Freelance', amount: 350.00 }
+    ]
+  })
 
   // Seed Budgets
-  const [budgets, setBudgets] = useState<Budget[]>([
-    { category: 'Food', limit: 300 },
-    { category: 'Utilities', limit: 150 },
-    { category: 'Entertainment', limit: 100 },
-    { category: 'Office', limit: 200 }
-  ])
+  const [budgets, setBudgets] = useState<Budget[]>(() => {
+    return cachedFinances?.budgets || [
+      { category: 'Food', limit: 300 },
+      { category: 'Utilities', limit: 150 },
+      { category: 'Entertainment', limit: 100 },
+      { category: 'Office', limit: 200 }
+    ]
+  })
 
   // Seed Savings Goals
-  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([
-    { id: 's-1', name: 'MacBook Pro Fund', target: 2000, saved: 1200 },
-    { id: 's-2', name: 'Emergency Reserve', target: 5000, saved: 2500 }
-  ])
+  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>(() => {
+    return cachedFinances?.savingsGoals || [
+      { id: 's-1', name: 'MacBook Pro Fund', target: 2000, saved: 1200 },
+      { id: 's-2', name: 'Emergency Reserve', target: 5000, saved: 2500 }
+    ]
+  })
+
+  React.useEffect(() => {
+    saveUserData('finances', { transactions, budgets, savingsGoals })
+  }, [transactions, budgets, savingsGoals])
 
   React.useEffect(() => {
     try {

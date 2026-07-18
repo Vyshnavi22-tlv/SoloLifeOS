@@ -16,6 +16,7 @@ import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input, Select } from '../components/ui/Input'
 import { useToastStore } from '../stores/toastStore'
+import { saveUserData } from '../lib/persistence'
 
 interface NoteVersion {
   timestamp: string
@@ -41,43 +42,55 @@ export const Notes: React.FC = () => {
   const [newFolderName, setNewFolderName] = useState('')
 
   // Seed Notes
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      id: 'note-1',
-      title: 'SoloLife UI Design Guidelines',
-      content: `# Design System tokens\n\n**Colors**:\n- Soft White\n- Light Blue\n- Lavender\n\n\`\`\`css\n/* Primary variables */\n:root {\n  --color-sky-light: #f0f9ff;\n  --color-pink-light: #fdf2f8;\n}\n\`\`\`\n\nEnjoy writing clean UI code!`,
-      folder: 'Work',
-      tags: ['Design', 'CSS'],
-      pinned: true,
-      updatedAt: new Date().toLocaleString(),
-      versions: [
-        { timestamp: new Date(Date.now() - 600000).toLocaleString(), content: '# Draft system tokens' },
-        { timestamp: new Date().toLocaleString(), content: `# Design System tokens\n\n**Colors**:\n- Soft White\n- Light Blue\n- Lavender\n\n\`\`\`css\n/* Primary variables */\n:root {\n  --color-sky-light: #f0f9ff;\n  --color-pink-light: #fdf2f8;\n}\n\`\`\`\n\nEnjoy writing clean UI code!` }
-      ]
-    },
-    {
-      id: 'note-2',
-      title: 'Ideas for next SaaS product',
-      content: `### Micro-SaaS ideas\n\n1. AI-driven Pomodoro companion\n2. Real-time developer log exporter\n3. Ambient music tracker dashboard\n\n![Mockup reference](https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&auto=format&fit=crop&q=60)`,
-      folder: 'Ideas',
-      tags: ['Business', 'AI'],
-      pinned: false,
-      updatedAt: new Date(Date.now() - 3600000).toLocaleString(),
-      versions: [
-        { timestamp: new Date(Date.now() - 3600000).toLocaleString(), content: '### Micro-SaaS ideas' }
-      ]
-    },
-    {
-      id: 'note-3',
-      title: 'Quick Grocery Checklist',
-      content: `* Organic Almond milk\n* Ground coffee (medium roast)\n* Weekly eggs and avocados`,
-      folder: 'Personal',
-      tags: ['Chores'],
-      pinned: false,
-      updatedAt: new Date(Date.now() - 7200000).toLocaleString(),
-      versions: []
+  const [notes, setNotes] = useState<Note[]>(() => {
+    const cached = localStorage.getItem('sololifeos_notes')
+    if (cached) {
+      try {
+        return JSON.parse(cached)
+      } catch {}
     }
-  ])
+    return [
+      {
+        id: 'note-1',
+        title: 'SoloLife UI Design Guidelines',
+        content: `# Design System tokens\n\n**Colors**:\n- Soft White\n- Light Blue\n- Lavender\n\n\`\`\`css\n/* Primary variables */\n:root {\n  --color-sky-light: #f0f9ff;\n  --color-pink-light: #fdf2f8;\n}\n\`\`\`\n\nEnjoy writing clean UI code!`,
+        folder: 'Work',
+        tags: ['Design', 'CSS'],
+        pinned: true,
+        updatedAt: new Date().toLocaleString(),
+        versions: [
+          { timestamp: new Date(Date.now() - 600000).toLocaleString(), content: '# Draft system tokens' },
+          { timestamp: new Date().toLocaleString(), content: `# Design System tokens\n\n**Colors**:\n- Soft White\n- Light Blue\n- Lavender\n\n\`\`\`css\n/* Primary variables */\n:root {\n  --color-sky-light: #f0f9ff;\n  --color-pink-light: #fdf2f8;\n}\n\`\`\`\n\nEnjoy writing clean UI code!` }
+        ]
+      },
+      {
+        id: 'note-2',
+        title: 'Ideas for next SaaS product',
+        content: `### Micro-SaaS ideas\n\n1. AI-driven Pomodoro companion\n2. Real-time developer log exporter\n3. Ambient music tracker dashboard\n\n![Mockup reference](https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&auto=format&fit=crop&q=60)`,
+        folder: 'Ideas',
+        tags: ['Business', 'AI'],
+        pinned: false,
+        updatedAt: new Date(Date.now() - 3600000).toLocaleString(),
+        versions: [
+          { timestamp: new Date(Date.now() - 3600000).toLocaleString(), content: '### Micro-SaaS ideas' }
+        ]
+      },
+      {
+        id: 'note-3',
+        title: 'Quick Grocery Checklist',
+        content: `* Organic Almond milk\n* Ground coffee (medium roast)\n* Weekly eggs and avocados`,
+        folder: 'Personal',
+        tags: ['Chores'],
+        pinned: false,
+        updatedAt: new Date(Date.now() - 7200000).toLocaleString(),
+        versions: []
+      }
+    ]
+  })
+
+  React.useEffect(() => {
+    saveUserData('notes', notes)
+  }, [notes])
 
   React.useEffect(() => {
     try {

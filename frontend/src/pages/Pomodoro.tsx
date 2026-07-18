@@ -14,6 +14,7 @@ import { Card } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Dialog } from '../components/ui/Dialog'
 import { useToastStore } from '../stores/toastStore'
+import { saveUserData } from '../lib/persistence'
 
 interface SessionLog {
   timestamp: string
@@ -23,6 +24,17 @@ interface SessionLog {
 
 export const Pomodoro: React.FC = () => {
   const { addToast } = useToastStore()
+
+  // Load pomodoro data from cache
+  const cachedPomodoro = (() => {
+    const cached = localStorage.getItem('sololifeos_pomodoro')
+    if (cached) {
+      try {
+        return JSON.parse(cached)
+      } catch {}
+    }
+    return null
+  })()
 
   // Durations (in seconds)
   const [focusDur, setFocusDur] = useState(1500) // 25 mins
@@ -42,10 +54,16 @@ export const Pomodoro: React.FC = () => {
   const [autoStartFocus, setAutoStartFocus] = useState(false)
 
   // Statistics
-  const [sessionLogs, setSessionLogs] = useState<SessionLog[]>([
-    { timestamp: new Date(Date.now() - 3600000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), mode: 'focus', duration: 25 },
-    { timestamp: new Date(Date.now() - 3300000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), mode: 'short_break', duration: 5 }
-  ])
+  const [sessionLogs, setSessionLogs] = useState<SessionLog[]>(() => {
+    return cachedPomodoro || [
+      { timestamp: new Date(Date.now() - 3600000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), mode: 'focus', duration: 25 },
+      { timestamp: new Date(Date.now() - 3300000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), mode: 'short_break', duration: 5 }
+    ]
+  })
+
+  useEffect(() => {
+    saveUserData('pomodoro', sessionLogs)
+  }, [sessionLogs])
 
   // Custom durations modal
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)

@@ -16,6 +16,7 @@ import { Input, Select } from '../components/ui/Input'
 import { Dialog } from '../components/ui/Dialog'
 import { useToastStore } from '../stores/toastStore'
 import { LineChart } from '../components/ui/Chart'
+import { saveUserData } from '../lib/persistence'
 
 interface Milestone {
   id: string
@@ -37,61 +38,73 @@ export const Goals: React.FC = () => {
   const { addToast } = useToastStore()
 
   // Seed Data
-  const [goals, setGoals] = useState<Goal[]>([
-    {
-      id: 'goal-1',
-      title: 'Obtain AWS Solutions Architect Cert',
-      description: 'Study cloud architectures, VPC configs, and scale options.',
-      category: 'learning',
-      deadline: '2026-10-15',
-      milestones: [
-        { id: 'm-1-1', title: 'Complete Stephane Maarek Course', done: true },
-        { id: 'm-1-2', title: 'Pass 3 mock practice tests', done: false },
-        { id: 'm-1-3', title: 'Schedule exam slot', done: false }
-      ],
-      history: [
-        { label: 'Week 1', value: 0 },
-        { label: 'Week 2', value: 15 },
-        { label: 'Week 3', value: 33 },
-        { label: 'Week 4', value: 33 }
-      ]
-    },
-    {
-      id: 'goal-2',
-      title: 'Run a Half Marathon',
-      description: 'Prepare legs and cardiovascular strength for 21.1km run.',
-      category: 'health',
-      deadline: '2026-08-30',
-      milestones: [
-        { id: 'm-2-1', title: 'Run 10km under 60 mins', done: true },
-        { id: 'm-2-2', title: 'Complete 15km endurance run', done: true },
-        { id: 'm-2-3', title: 'Weekly taper and stretching routine', done: false }
-      ],
-      history: [
-        { label: 'Week 1', value: 10 },
-        { label: 'Week 2', value: 35 },
-        { label: 'Week 3', value: 66 },
-        { label: 'Week 4', value: 66 }
-      ]
-    },
-    {
-      id: 'goal-3',
-      title: 'Emergency Reserve Fund Savings',
-      description: 'Save 6 months of basic expenses for security.',
-      category: 'financial',
-      deadline: '2026-12-31',
-      milestones: [
-        { id: 'm-3-1', title: 'Set up automatic deposit trigger', done: true },
-        { id: 'm-3-2', title: 'Reach first $5,000 threshold', done: false }
-      ],
-      history: [
-        { label: 'Week 1', value: 20 },
-        { label: 'Week 2', value: 30 },
-        { label: 'Week 3', value: 50 },
-        { label: 'Week 4', value: 50 }
-      ]
+  const [goals, setGoals] = useState<Goal[]>(() => {
+    const cached = localStorage.getItem('sololifeos_goals')
+    if (cached) {
+      try {
+        return JSON.parse(cached)
+      } catch {}
     }
-  ])
+    return [
+      {
+        id: 'goal-1',
+        title: 'Obtain AWS Solutions Architect Cert',
+        description: 'Study cloud architectures, VPC configs, and scale options.',
+        category: 'learning',
+        deadline: '2026-10-15',
+        milestones: [
+          { id: 'm-1-1', title: 'Complete Stephane Maarek Course', done: true },
+          { id: 'm-1-2', title: 'Pass 3 mock practice tests', done: false },
+          { id: 'm-1-3', title: 'Schedule exam slot', done: false }
+        ],
+        history: [
+          { label: 'Week 1', value: 0 },
+          { label: 'Week 2', value: 15 },
+          { label: 'Week 3', value: 33 },
+          { label: 'Week 4', value: 33 }
+        ]
+      },
+      {
+        id: 'goal-2',
+        title: 'Run a Half Marathon',
+        description: 'Prepare legs and cardiovascular strength for 21.1km run.',
+        category: 'health',
+        deadline: '2026-08-30',
+        milestones: [
+          { id: 'm-2-1', title: 'Run 10km under 60 mins', done: true },
+          { id: 'm-2-2', title: 'Complete 15km endurance run', done: true },
+          { id: 'm-2-3', title: 'Weekly taper and stretching routine', done: false }
+        ],
+        history: [
+          { label: 'Week 1', value: 10 },
+          { label: 'Week 2', value: 35 },
+          { label: 'Week 3', value: 66 },
+          { label: 'Week 4', value: 66 }
+        ]
+      },
+      {
+        id: 'goal-3',
+        title: 'Emergency Reserve Fund Savings',
+        description: 'Save 6 months of basic expenses for security.',
+        category: 'financial',
+        deadline: '2026-12-31',
+        milestones: [
+          { id: 'm-3-1', title: 'Set up automatic deposit trigger', done: true },
+          { id: 'm-3-2', title: 'Reach first $5,000 threshold', done: false }
+        ],
+        history: [
+          { label: 'Week 1', value: 20 },
+          { label: 'Week 2', value: 30 },
+          { label: 'Week 3', value: 50 },
+          { label: 'Week 4', value: 50 }
+        ]
+      }
+    ]
+  })
+
+  React.useEffect(() => {
+    saveUserData('goals', goals)
+  }, [goals])
 
   // Modals States
   const [isModalOpen, setIsModalOpen] = useState(false)

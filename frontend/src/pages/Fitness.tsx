@@ -14,6 +14,7 @@ import { Input, Select } from '../components/ui/Input'
 import { Dialog } from '../components/ui/Dialog'
 import { useToastStore } from '../stores/toastStore'
 import { LineChart } from '../components/ui/Chart'
+import { saveUserData } from '../lib/persistence'
 
 interface Workout {
   id: string
@@ -36,26 +37,49 @@ export const Fitness: React.FC = () => {
 
   const todayStr = new Date().toISOString().split('T')[0]
 
+  // Load fitness from cache
+  const cachedFitness = (() => {
+    const cached = localStorage.getItem('sololifeos_fitness')
+    if (cached) {
+      try {
+        return JSON.parse(cached)
+      } catch {}
+    }
+    return null
+  })()
+
   // Seed Workouts
-  const [workouts, setWorkouts] = useState<Workout[]>([
-    { id: 'w-1', date: todayStr, name: 'Evening Jogging', type: 'cardio', duration: 30 },
-    { id: 'w-2', date: todayStr, name: 'Dumbbell Bench Press', type: 'strength', duration: 25, sets: 4, reps: 10, weight: 24 },
-    { id: 'w-3', date: new Date(Date.now() - 86400000).toISOString().split('T')[0], name: 'Hatha Yoga', type: 'flexibility', duration: 45 }
-  ])
+  const [workouts, setWorkouts] = useState<Workout[]>(() => {
+    return cachedFitness?.workouts || [
+      { id: 'w-1', date: todayStr, name: 'Evening Jogging', type: 'cardio', duration: 30 },
+      { id: 'w-2', date: todayStr, name: 'Dumbbell Bench Press', type: 'strength', duration: 25, sets: 4, reps: 10, weight: 24 },
+      { id: 'w-3', date: new Date(Date.now() - 86400000).toISOString().split('T')[0], name: 'Hatha Yoga', type: 'flexibility', duration: 45 }
+    ]
+  })
 
   // Seed Weight Logs
-  const [weightLogs, setWeightLogs] = useState<WeightLog[]>([
-    { label: 'Wk 1', value: 74.2 },
-    { label: 'Wk 2', value: 73.8 },
-    { label: 'Wk 3', value: 73.5 },
-    { label: 'Wk 4', value: 73.1 }
-  ])
+  const [weightLogs, setWeightLogs] = useState<WeightLog[]>(() => {
+    return cachedFitness?.weightLogs || [
+      { label: 'Wk 1', value: 74.2 },
+      { label: 'Wk 2', value: 73.8 },
+      { label: 'Wk 3', value: 73.5 },
+      { label: 'Wk 4', value: 73.1 }
+    ]
+  })
 
   // Daily metrics states
-  const [waterIntake, setWaterIntake] = useState(1500) // ml
-  const [dailySteps, setDailySteps] = useState(6540)
+  const [waterIntake, setWaterIntake] = useState<number>(() => {
+    return cachedFitness?.waterIntake !== undefined ? cachedFitness.waterIntake : 1500
+  })
+  const [dailySteps, setDailySteps] = useState<number>(() => {
+    return cachedFitness?.dailySteps !== undefined ? cachedFitness.dailySteps : 6540
+  })
   const [stepsGoal] = useState(10000)
   const [waterGoal] = useState(3000)
+
+  React.useEffect(() => {
+    saveUserData('fitness', { workouts, weightLogs, waterIntake, dailySteps })
+  }, [workouts, weightLogs, waterIntake, dailySteps])
 
   // Modals States
   const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false)

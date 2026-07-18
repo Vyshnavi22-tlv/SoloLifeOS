@@ -23,11 +23,13 @@ import { AiAssistant } from './pages/AiAssistant'
 import { useToastStore } from './stores/toastStore'
 import { PwaManager } from './components/PwaManager'
 import { ToastContainer } from './components/ui/Toast'
+import { fetchAndRestoreUserData } from './lib/persistence'
 
 
 function App() {
   const theme = useThemeStore((state) => state.theme)
   const initializeAuth = useAuthStore((state) => state.initializeAuth)
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
   const addToast = useToastStore((state) => state.addToast)
 
@@ -35,6 +37,12 @@ function App() {
     document.documentElement.setAttribute('data-theme', theme)
     initializeAuth()
   }, [theme, initializeAuth])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchAndRestoreUserData()
+    }
+  }, [isAuthenticated])
 
   useEffect(() => {
     let lastFiredMin = ''

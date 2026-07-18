@@ -102,6 +102,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     storage.removeItem('user')
     localStorage.removeItem('rememberMe')
 
+    // Clear all persistent user data keys
+    const keys = [
+      'tasks', 'notes', 'habits', 'finances', 'goals', 'fitness', 
+      'pomodoro', 'journal', 'study', 'reading', 'alarms'
+    ]
+    keys.forEach(k => {
+      localStorage.removeItem(`sololifeos_${k}`)
+    })
+
     set({
       token: null,
       refreshToken: null,
